@@ -1,17 +1,19 @@
 import React from 'react';
 import { Shield, Settings, Bell, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { authService } from '../services/authService';
+import type { User } from '@supabase/supabase-js';
 
 interface HeaderProps {
   userRole: 'citizen' | 'admin';
   setUserRole: (role: 'citizen' | 'admin') => void;
+  user: User | null;
+  userProfile: any;
 }
 
-const Header: React.FC<HeaderProps> = ({ userRole, setUserRole }) => {
-  const handleLogout = () => {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userRole');
-    window.location.href = '/login';
+const Header: React.FC<HeaderProps> = ({ userRole, setUserRole, user, userProfile }) => {
+  const handleLogout = async () => {
+    await authService.signOut();
   };
 
   return (
@@ -33,14 +35,14 @@ const Header: React.FC<HeaderProps> = ({ userRole, setUserRole }) => {
               <Bell className="h-5 w-5" />
             </button>
             
-            <select 
-              value={userRole} 
-              onChange={(e) => setUserRole(e.target.value as 'citizen' | 'admin')}
-              className="text-sm border rounded-md px-3 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="citizen">Citizen</option>
-              <option value="admin">Admin</option>
-            </select>
+            {userProfile && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">{userProfile.full_name}</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  {userProfile.rank}
+                </span>
+              </div>
+            )}
             
             <Link to="/profile" className="p-2 text-gray-600 hover:text-gray-900 transition-colors">
               <Settings className="h-5 w-5" />

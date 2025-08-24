@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { authService } from '../services/authService';
 
-const Login = () => {
+interface LoginProps {
+  onAuthSuccess: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onAuthSuccess }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -28,37 +34,37 @@ const Login = () => {
     setError('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Mock validation
-      if (formData.email === 'admin@urbanwatch.com' && formData.password === 'admin123') {
-        // Successful login
-        localStorage.setItem('userToken', 'mock-jwt-token');
-        localStorage.setItem('userRole', 'admin');
-        window.location.reload();
-      } else if (formData.email.includes('@') && formData.password.length >= 6) {
-        // Successful citizen login
-        localStorage.setItem('userToken', 'mock-jwt-token');
-        localStorage.setItem('userRole', 'citizen');
-        window.location.reload();
+      const { user, error } = await authService.signIn({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (error) {
+        setError(error);
       } else {
-        setError('Invalid email or password. Please try again.');
+        onAuthSuccess();
+        navigate('/');
       }
-    } catch (err) {
-      setError('Login failed. Please check your connection and try again.');
+    } catch (error: any) {
+      setError(error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    // Mock Google OAuth
-    alert('Google OAuth integration would be implemented here');
+    // TODO: Implement Google OAuth with Supabase
+    setError('Google OAuth will be available soon');
   };
 
-  const handleForgotPassword = () => {
-    alert('Password reset functionality would be implemented here');
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    
+    // TODO: Implement password reset
+    setError('Password reset will be available soon');
   };
 
   return (

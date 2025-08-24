@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Mail, Lock, User, Phone, MapPin, AlertCircle, CheckCircle } from 'lucide-react';
+import { authService } from '../services/authService';
 
-const Signup = () => {
+interface SignupProps {
+  onAuthSuccess: () => void;
+}
+
+const Signup: React.FC<SignupProps> = ({ onAuthSuccess }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -58,31 +64,35 @@ const Signup = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { user, error } = await authService.signUp({
+        email: formData.email,
+        password: formData.password,
+        fullName: `${formData.firstName} ${formData.lastName}`,
+        phone: formData.phone,
+        city: formData.city,
+        userType: formData.userType as 'citizen' | 'official'
+      });
+
+      if (error) {
+        setError(error);
+      } else {
+        setSuccess('Account created successfully! Welcome to UrbanWatch.');
+        onAuthSuccess();
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
       
-      // Mock successful registration
-      setSuccess('Account created successfully! Please check your email to verify your account.');
-      
-      // Set authentication tokens
-      localStorage.setItem('userToken', 'mock-jwt-token');
-      localStorage.setItem('userRole', formData.userType);
-      
-      // Redirect after success
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-      
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (error: any) {
+      setError(error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignup = () => {
-    // Mock Google OAuth
-    alert('Google OAuth integration would be implemented here');
+    // TODO: Implement Google OAuth with Supabase
+    setError('Google OAuth will be available soon');
   };
 
   const getPasswordStrength = (password: string) => {
